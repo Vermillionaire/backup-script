@@ -1,0 +1,115 @@
+#!/bin/bash
+#Backs up all non-hidden folders and files in home directory
+#Accepts additional files and folters to compress as arguments
+#Outputs to .bckup folder
+
+
+ITEMS="*";
+FOLDER="";
+EXCLUDE=false
+INCLUDE=false
+CHECK=false
+
+until [ -z "$1" ]
+do
+  case "$1" in 
+    "-f")
+       if [ -z "$2" ]; then
+         echo "Please enter a folder location"
+       else
+         FOLDER="$2"
+         shift
+       fi
+     ;;
+    "-I")
+      INCLUDE=true
+      EXCLUDE=false
+      shift
+      continue
+    ;;
+    "-E")
+      EXCLUDE=true
+      INCLUDE=false
+      shift
+      continue
+    ;;
+    "-C")
+      CHECK=true
+      shift
+      continue
+    ;;
+    *)
+      if $INCLUDE; then
+        ITEMS="$ITEMS $1"
+      elif $EXCLUDE; then
+        echo "Removing $1"
+        ITEMS="$( echo $ITEMS | sed "s/$1//g" )"
+      fi
+      shift
+    ;;
+  esac
+done 
+
+#Makes directory if it doesnt exist
+if [[ "$FOLDER" &&  ! -d "$FOLDER" ]]; then
+	mkdir $FOLDER
+fi
+
+cd $FOLDER 
+FILE_NAME="BACKUP_FILE"
+
+#Tests if that file exist already
+#Adds a number to the end if it does
+if [ -f "$FILE_NAME" ]; then
+  NUM="1"
+  while [ -f "$FILE_NAME$NUM" ]
+  do
+    NUM=$[$NUM+1]
+  done
+  FILE_NAME="$FILE_NAME$NUM"
+fi
+
+
+#Checks if the user has permission for all the files he 
+#is trying to back up 
+if $CHECK && [ "$(id -u)" != "0" ]; then 
+  echo "Checking"
+  FILE_USERS="$( ls -lR | awk '{print $3}' )" 
+  ALL_USERS="$( cat /etc/passwd | awk -F: '{print $1}' )"
+  for usr in $FILE_USERS
+  do
+    if [ usr != "$USER" ]; then
+      echo $usr
+      for x in $ALL_USERS
+      do 
+        if [ x = usr ]; then
+          print "You may not have permissions for all the files/folders you included"
+          print "Would you like to continue (Y/N)"
+          read -t 10 -n 1 options
+          case "$options" in 
+            N)
+            exit 2
+            ;;
+            Y)
+            break 2
+            ;;
+            *)
+            exit 2
+            ;;
+          esac
+        fi
+      done
+    fi
+  done
+fi
+exit    
+
+if [ "$(tar -cf .bckup/backup.tar $@ *)" -eq 2 ]; then
+  echo "Tar creatinon failed"
+else
+  echo "Tar size is $( ls -lh | awk '{ print $5 }' )"
+  7z a backup.tar .bckup/$FILE_NAME
+fi
+
+
+
