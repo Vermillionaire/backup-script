@@ -4,7 +4,7 @@
 
 
 ITEMS="*";
-FOLDER="";
+FOLDER="~";
 EXCLUDE=false
 INCLUDE=false
 CHECK=false
@@ -78,7 +78,6 @@ if $CHECK && [ "$(id -u)" != "0" ]; then
   for usr in $FILE_USERS
   do
     if [ usr != "$USER" ]; then
-      echo $usr
       for x in $ALL_USERS
       do 
         if [ x = usr ]; then
@@ -109,7 +108,8 @@ if [ "$?" -eq 2 ]; then
   echo "Tar creatinon failed"
 else
   echo "$( ls -lh | awk '{ print $9, " is ", $5 }' )"
-  7z a $FOLDER/$FILE_NAME $FOLDER/backup.tar 
+  tar -tvf $FOLDER/backup.tar > $FOLDER/manifest
+  7z a $FOLDER/$FILE_NAME $FOLDER/backup.tar $FOLDER/manifest
 fi
 
 rm -f $FOLDER/backup.tar
