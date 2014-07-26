@@ -1,7 +1,6 @@
 #!/bin/bash
-#Backs up all non-hidden folders and files in home directory
+#Backs up all non-hidden folders and files in the current directory
 #Accepts additional files and folters to compress as arguments
-#Outputs to .bckup folder
 
 
 ITEMS="*";
