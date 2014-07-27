@@ -5,6 +5,7 @@
 
 ITEMS="*";
 FOLDER=".";
+WORKING_DIRECTORY="$PWD"
 EXCLUDE=false
 INCLUDE=false
 CHECK=false
@@ -59,20 +60,24 @@ cd $FOLDER
 FILE_NAME="BACKUP_FILE"
 
 #Tests if that file exist already
-#Adds a number to the end if it does
 if [ -f "$FILE_NAME" ]; then
-  NUM="1"
-  while [ -f "$FILE_NAME$NUM" ]
-  do
-    NUM=$[$NUM+1]
-  done
-  FILE_NAME="$FILE_NAME$NUM"
+  echo "File already exists.\nOveride (Y/N)"
+  read -t 10 -n 1 options
+  case "$options" in
+    "N")
+      echo "New file name:"
+      read FILE_NAME
+    ;;
+    *)
+    ;;
+  esac
 fi
 
-if ! [[ "$FOLDER" ]]; then
-	cd ..
-fi
 
+cd $WORKING_DIRECTORY
+
+
+echo $PWD
 #Checks if the user has permission for all the files he 
 #is trying to back up 
 if $CHECK && [ "$(id -u)" != "0" ]; then 
@@ -89,10 +94,10 @@ if $CHECK && [ "$(id -u)" != "0" ]; then
           print "Would you like to continue (Y/N)"
           read -t 10 -n 1 options
           case "$options" in 
-            N)
+            "N")
             exit 2
             ;;
-            Y)
+            "Y")
             break 2
             ;;
             *)
