@@ -4,7 +4,7 @@
 
 
 ITEMS="*";
-FOLDER="~";
+FOLDER=".";
 EXCLUDE=false
 INCLUDE=false
 CHECK=false
@@ -49,6 +49,7 @@ do
   esac
 done 
 
+echo $ITEMS
 #Makes directory if it doesnt exist
 if [[ "$FOLDER" &&  ! -d "$FOLDER" ]]; then
 	mkdir $FOLDER
@@ -68,7 +69,10 @@ if [ -f "$FILE_NAME" ]; then
   FILE_NAME="$FILE_NAME$NUM"
 fi
 
-cd ..
+if ! [[ "$FOLDER" ]]; then
+	cd ..
+fi
+
 #Checks if the user has permission for all the files he 
 #is trying to back up 
 if $CHECK && [ "$(id -u)" != "0" ]; then 
@@ -102,14 +106,15 @@ if $CHECK && [ "$(id -u)" != "0" ]; then
 fi
 
 
+echo "Creating tar"
 tar -cf $FOLDER/backup.tar $ITEMS
 
 if [ "$?" -eq 2 ]; then
   echo "Tar creatinon failed"
 else
   echo "$( ls -lh | awk '{ print $9, " is ", $5 }' )"
-  tar -tvf $FOLDER/backup.tar > $FOLDER/manifest
-  7z a $FOLDER/$FILE_NAME $FOLDER/backup.tar $FOLDER/manifest
+  tar -tvf "$FOLDER/backup.tar" > "$FOLDER/manifest"
+  7z a "$FOLDER/$FILE_NAME" "$FOLDER/backup.tar" "$FOLDER/manifest"
 fi
 
 rm -f $FOLDER/backup.tar
